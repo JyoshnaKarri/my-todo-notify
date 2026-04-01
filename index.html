@@ -1,38 +1,163 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Todo with Alarms</title>
+    <title>My Todo with Alarms & Streaks</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: Arial; max-width: 600px; margin: 50px auto; padding: 20px; }
-        .todo-item { display: flex; gap: 10px; margin: 10px 0; align-items: center; }
-        button { padding: 8px 15px; cursor: pointer; }
-        #notification-btn { background: #4CAF50; color: white; border: none; padding: 12px; }
-        .alarm { background: #ff9800; }
-        input[type="datetime-local"] { padding: 5px; }
+        body { 
+            font-family: Arial; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .streak-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .streak-number {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .streak-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .fire-icon {
+            font-size: 32px;
+        }
+        
+        .todo-item { 
+            display: flex; 
+            gap: 10px; 
+            margin: 10px 0; 
+            align-items: center; 
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        button { 
+            padding: 8px 15px; 
+            cursor: pointer; 
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        #notification-btn { 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            padding: 12px;
+            width: 100%;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .alarm { 
+            background: #ff9800; 
+        }
+        
+        input[type="text"], input[type="datetime-local"] { 
+            padding: 10px; 
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .goals-section {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .goal-input {
+            width: 100%;
+            margin: 5px 0;
+            padding: 8px;
+        }
+        
+        .complete-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .delete-btn {
+            background: #f44336;
+            color: white;
+        }
+        
+        .sound-toggle {
+            background: #2196F3;
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        @keyframes fireAnimation {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+        
+        .fire-animation {
+            animation: fireAnimation 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body>
-    <h1>📋 My Todo with Alarms</h1>
-    
-    <button id="notification-btn">🔔 Enable Notifications</button>
-    
-    <div style="margin: 20px 0;">
-        <input type="text" id="todo-text" placeholder="What to do?" style="padding: 8px; width: 60%;">
-        <input type="datetime-local" id="todo-time" style="padding: 8px;">
-        <button onclick="addTodo()">➕ Add</button>
-    </div>
-    
-    <div id="todo-list"></div>
-    
-    <div style="margin-top: 20px; padding: 10px; background: #f0f0f0;">
-        <h3>📅 Today's Study Goals</h3>
-        <div id="daily-goals">
-            <input type="text" placeholder="Goal 1" id="goal1">
-            <input type="text" placeholder="Goal 2" id="goal2">
-            <button onclick="saveGoals()">Save Goals</button>
+    <div class="container">
+        <h1>📋 Todo with Streaks & Alarms</h1>
+        
+        <div class="streak-card">
+            <div class="fire-icon">🔥</div>
+            <div class="streak-number" id="streak-count">0</div>
+            <div class="streak-label">Day Streak</div>
+            <div style="font-size: 12px; margin-top: 5px;" id="last-completed">Complete your goals to maintain streak!</div>
+        </div>
+        
+        <button id="notification-btn">🔔 Enable Notifications</button>
+        
+        <div style="margin: 20px 0;">
+            <input type="text" id="todo-text" placeholder="What to do?" style="width: 100%; margin-bottom: 10px;">
+            <input type="datetime-local" id="todo-time" style="width: 100%; margin-bottom: 10px;">
+            <button onclick="addTodo()" style="width: 100%; background: #4CAF50; color: white;">➕ Add Task</button>
+        </div>
+        
+        <div id="todo-list"></div>
+        
+        <div class="goals-section">
+            <h3>📚 Today's Study Goals</h3>
+            <div id="daily-goals">
+                <input type="text" placeholder="Goal 1 (e.g., Read 2 chapters)" id="goal1" class="goal-input">
+                <input type="text" placeholder="Goal 2 (e.g., Practice coding)" id="goal2" class="goal-input">
+                <button onclick="completeDailyGoals()" id="complete-goals-btn" style="width: 100%; margin-top: 10px; background: #4CAF50; color: white;">✅ Complete Today's Goals</button>
+                <button onclick="saveGoals()" style="width: 100%; margin-top: 5px; background: #666; color: white;">💾 Save Goals</button>
+            </div>
         </div>
     </div>
+
+    <audio id="alarm-sound" preload="auto">
+        <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
+    </audio>
 
     <script src="app.js"></script>
 </body>
