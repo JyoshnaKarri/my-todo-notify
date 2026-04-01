@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Todo with Alarms</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .todo-item { display: flex; gap: 10px; margin: 10px 0; align-items: center; }
+        button { padding: 8px 15px; cursor: pointer; }
+        #notification-btn { background: #4CAF50; color: white; border: none; padding: 12px; }
+        .alarm { background: #ff9800; }
+        input[type="datetime-local"] { padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>📋 My Todo with Alarms</h1>
+    
+    <button id="notification-btn">🔔 Enable Notifications</button>
+    
+    <div style="margin: 20px 0;">
+        <input type="text" id="todo-text" placeholder="What to do?" style="padding: 8px; width: 60%;">
+        <input type="datetime-local" id="todo-time" style="padding: 8px;">
+        <button onclick="addTodo()">➕ Add</button>
+    </div>
+    
+    <div id="todo-list"></div>
+    
+    <div style="margin-top: 20px; padding: 10px; background: #f0f0f0;">
+        <h3>📅 Today's Study Goals</h3>
+        <div id="daily-goals">
+            <input type="text" placeholder="Goal 1" id="goal1">
+            <input type="text" placeholder="Goal 2" id="goal2">
+            <button onclick="saveGoals()">Save Goals</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
