@@ -1,4 +1,4 @@
-// ========== STREAK SYSTEM ==========
+// ========== STREAK SYSTEM (FIXED) ==========
 let streak = JSON.parse(localStorage.getItem('streak')) || {
     count: 0,
     bestStreak: 0,
@@ -6,22 +6,9 @@ let streak = JSON.parse(localStorage.getItem('streak')) || {
     history: {}
 };
 
-// ========== HABITS SYSTEM ==========
-let habits = JSON.parse(localStorage.getItem('habits')) || {
-    unstop: { streak: 0, lastCompleted: null, history: {} },
-    linkedin: { streak: 0, lastCompleted: null, history: {} },
-    gmail: { streak: 0, lastCompleted: null, history: {} }
-};
-
-// ========== HACKATHON SYSTEM ==========
-let hackathons = JSON.parse(localStorage.getItem('hackathons')) || [];
-
-// ========== COMPLETED GOALS HISTORY ==========
-let completedGoalsHistory = JSON.parse(localStorage.getItem('completedGoalsHistory')) || [];
-
-// ========== INITIALIZE HISTORY ==========
+// Initialize history for last 30 days
 function initHistory() {
-    for (let i = 6; i >= 0; i--) {
+    for (let i = 30; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
         const dateKey = date.toISOString().split('T')[0];
@@ -36,32 +23,59 @@ function saveStreak() {
     localStorage.setItem('streak', JSON.stringify(streak));
 }
 
-function saveHabits() {
-    localStorage.setItem('habits', JSON.stringify(habits));
+// CHECK AND UPDATE STREAK ON PAGE LOAD (CRITICAL FIX)
+function checkAndUpdateStreakOnLoad() {
+    const today = new Date();
+    const todayKey = today.toISOString().split('T')[0];
+    const lastCompleted = streak.lastCompletedDate ? new Date(streak.lastCompletedDate).toISOString().split('T')[0] : null;
+    
+    // Check if user missed any days
+    if (lastCompleted && lastCompleted !== todayKey) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayKey = yesterday.toISOString().split('T')[0];
+        
+        // If last completion was before yesterday, streak is broken
+        if (lastCompleted !== yesterdayKey && !streak.history[todayKey]) {
+            // Don't reset automatically - user needs to complete today
+            console.log('Streak may be broken. Complete today to continue.');
+        }
+    }
+    
+    updateAllDisplays();
 }
 
-// ========== UPDATE STREAK ==========
+// Update streak when goals are completed
 function updateStreak() {
     const today = new Date();
     const todayKey = today.toISOString().split('T')[0];
     
+    // Already completed today
     if (streak.history[todayKey]) {
+        alert('You already completed your goals today! Come back tomorrow.');
         return false;
     }
     
+    // Mark today as completed
     streak.history[todayKey] = true;
     
+    // Calculate yesterday
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayKey = yesterday.toISOString().split('T')[0];
     const lastCompleted = streak.lastCompletedDate ? new Date(streak.lastCompletedDate).toISOString().split('T')[0] : null;
     
     if (lastCompleted === yesterdayKey) {
+        // Streak continues
         streak.count++;
+    } else if (lastCompleted === todayKey) {
+        return false;
     } else {
+        // Streak starts fresh
         streak.count = 1;
     }
     
+    // Update best streak
     if (streak.count > streak.bestStreak) {
         streak.bestStreak = streak.count;
     }
@@ -70,13 +84,19 @@ function updateStreak() {
     saveStreak();
     
     // Add to completed goals history
-    addToCompletedHistory('Daily Goals Completed');
+    const goal1 = document.getElementById('goal1')?.value || 'Goal 1';
+    const goal2 = document.getElementById('goal2')?.value || 'Goal 2';
+    addToCompletedHistory(`Daily Goals: ${goal1}, ${goal2}`);
     
     updateAllDisplays();
+    showNotification('🎉 Streak Updated!', `You're on a ${streak.count} day streak!`);
+    
     return true;
 }
 
 // ========== ADD TO COMPLETED HISTORY ==========
+let completedGoalsHistory = JSON.parse(localStorage.getItem('completedGoalsHistory')) || [];
+
 function addToCompletedHistory(goalText) {
     const now = new Date();
     completedGoalsHistory.unshift({
@@ -120,7 +140,17 @@ function clearCompletedHistory() {
     }
 }
 
-// ========== HABITS TRACKING ==========
+// ========== HABITS SYSTEM ==========
+let habits = JSON.parse(localStorage.getItem('habits')) || {
+    unstop: { streak: 0, lastCompleted: null },
+    linkedin: { streak: 0, lastCompleted: null },
+    gmail: { streak: 0, lastCompleted: null }
+};
+
+function saveHabitsData() {
+    localStorage.setItem('habits', JSON.stringify(habits));
+}
+
 function toggleHabit(habitName) {
     const checkbox = document.getElementById(`habit-${habitName}`);
     const today = new Date().toISOString().split('T')[0];
@@ -134,41 +164,52 @@ function toggleHabit(habitName) {
         if (lastCompleted === yesterdayKey) {
             habits[habitName].streak++;
         } else if (lastCompleted === today) {
-            // Already completed today
+            checkbox.checked = false;
             return;
         } else {
             habits[habitName].streak = 1;
         }
         
         habits[habitName].lastCompleted = today;
-        saveHabits();
+        saveHabitsData();
         updateHabitDisplay();
+        addToCompletedHistory(`Habit: ${habitName.toUpperCase()}`);
     }
 }
 
 function updateHabitDisplay() {
     const today = new Date().toISOString().split('T')[0];
     
-    document.getElementById('unstop-streak').textContent = `Streak: ${habits.unstop.streak}`;
-    document.getElementById('linkedin-streak').textContent = `Streak: ${habits.linkedin.streak}`;
-    document.getElementById('gmail-streak').textContent = `Streak: ${habits.gmail.streak}`;
+    const unstopEl = document.getElementById('unstop-streak');
+    const linkedinEl = document.getElementById('linkedin-streak');
+    const gmailEl = document.getElementById('gmail-streak');
     
-    document.getElementById('habit-unstop').checked = habits.unstop.lastCompleted === today;
-    document.getElementById('habit-linkedin').checked = habits.linkedin.lastCompleted === today;
-    document.getElementById('habit-gmail').checked = habits.gmail.lastCompleted === today;
+    if (unstopEl) unstopEl.textContent = `Streak: ${habits.unstop.streak}`;
+    if (linkedinEl) linkedinEl.textContent = `Streak: ${habits.linkedin.streak}`;
+    if (gmailEl) gmailEl.textContent = `Streak: ${habits.gmail.streak}`;
+    
+    const unstopCheck = document.getElementById('habit-unstop');
+    const linkedinCheck = document.getElementById('habit-linkedin');
+    const gmailCheck = document.getElementById('habit-gmail');
+    
+    if (unstopCheck) unstopCheck.checked = habits.unstop.lastCompleted === today;
+    if (linkedinCheck) linkedinCheck.checked = habits.linkedin.lastCompleted === today;
+    if (gmailCheck) gmailCheck.checked = habits.gmail.lastCompleted === today;
 }
 
 function saveHabits() {
-    saveHabits();
+    saveHabitsData();
     alert('Habits saved for today!');
     updateHabitDisplay();
 }
 
-// ========== HACKATHON TRACKER ==========
+// ========== HACKATHON TRACKER (WITH REAL-TIME DEADLINES) ==========
+let hackathons = JSON.parse(localStorage.getItem('hackathons')) || [];
+
 function addHackathon() {
-    const name = document.getElementById('hack-name').value;
-    const deadline = document.getElementById('hack-deadline').value;
-    const status = document.getElementById('hack-status').value;
+    const name = document.getElementById('hack-name')?.value;
+    const deadline = document.getElementById('hack-deadline')?.value;
+    const status = document.getElementById('hack-status')?.value;
     
     if (!name || !deadline) {
         alert('Please enter hackathon name and deadline');
@@ -186,8 +227,8 @@ function addHackathon() {
     localStorage.setItem('hackathons', JSON.stringify(hackathons));
     renderHackathons();
     
-    document.getElementById('hack-name').value = '';
-    document.getElementById('hack-deadline').value = '';
+    if (document.getElementById('hack-name')) document.getElementById('hack-name').value = '';
+    if (document.getElementById('hack-deadline')) document.getElementById('hack-deadline').value = '';
 }
 
 function renderHackathons() {
@@ -199,6 +240,7 @@ function renderHackathons() {
         return;
     }
     
+    const now = new Date();
     const sorted = [...hackathons].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
     
     container.innerHTML = `
@@ -212,26 +254,192 @@ function renderHackathons() {
             </div>
         </div>
         ${sorted.map(hack => {
-            const daysLeft = Math.ceil((new Date(hack.deadline) - new Date()) / (1000 * 60 * 60 * 24));
-            const daysLeftText = daysLeft < 0 ? 'Past Due' : `${daysLeft} days`;
+            const deadlineDate = new Date(hack.deadline);
+            const daysLeft = Math.ceil((deadlineDate - now) / (1000 * 60 * 60 * 24));
+            let daysLeftText = '';
+            let daysLeftColor = '';
+            
+            if (daysLeft < 0) {
+                daysLeftText = '⚠️ Past Due';
+                daysLeftColor = 'gray';
+                // Auto-update status if past due
+                if (hack.status === 'upcoming' || hack.status === 'participating') {
+                    hack.status = 'completed';
+                    localStorage.setItem('hackathons', JSON.stringify(hackathons));
+                }
+            } else if (daysLeft === 0) {
+                daysLeftText = '🔥 TODAY!';
+                daysLeftColor = 'red';
+            } else {
+                daysLeftText = `${daysLeft} days`;
+                daysLeftColor = daysLeft <= 3 ? 'red' : 'green';
+            }
             
             return `
                 <div class="hackathon-row">
-                    <span>${hack.name}</span>
+                    <span><strong>${hack.name}</strong></span>
                     <span>${new Date(hack.deadline).toLocaleDateString()}</span>
                     <span><span class="status-badge status-${hack.status}">${hack.status}</span></span>
-                    <span style="color: ${daysLeft < 3 && daysLeft > 0 ? 'red' : daysLeft < 0 ? 'gray' : 'green'}">${daysLeftText}</span>
-                    <button onclick="deleteHackathon(${hack.id})" class="btn-danger" style="padding: 5px 10px;">❌</button>
+                    <span style="color: ${daysLeftColor}; font-weight: bold;">${daysLeftText}</span>
+                    <button onclick="deleteHackathon(${hack.id})" style="background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">❌</button>
                 </div>
             `;
         }).join('')}
     `;
+    
+    // Check for upcoming deadlines and send notifications
+    checkHackathonDeadlines(now);
+}
+
+function checkHackathonDeadlines(now) {
+    hackathons.forEach(hack => {
+        const deadlineDate = new Date(hack.deadline);
+        const daysLeft = Math.ceil((deadlineDate - now) / (1000 * 60 * 60 * 24));
+        
+        // Send notification for deadlines within 3 days
+        if (daysLeft === 3 || daysLeft === 1 || daysLeft === 0) {
+            if (!localStorage.getItem(`notified_${hack.id}_${daysLeft}`)) {
+                showNotification('⚠️ Hackathon Deadline!', `${hack.name} is in ${daysLeft} days!`);
+                localStorage.setItem(`notified_${hack.id}_${daysLeft}`, 'true');
+            }
+        }
+    });
 }
 
 function deleteHackathon(id) {
-    hackathons = hackathons.filter(h => h.id !== id);
-    localStorage.setItem('hackathons', JSON.stringify(hackathons));
-    renderHackathons();
+    if (confirm('Delete this hackathon?')) {
+        hackathons = hackathons.filter(h => h.id !== id);
+        localStorage.setItem('hackathons', JSON.stringify(hackathons));
+        renderHackathons();
+    }
+}
+
+// ========== ALARM SYSTEM (WORKING FIX) ==========
+let todos = JSON.parse(localStorage.getItem('todos')) || [];
+let alarmInterval = null;
+
+function addTodo() {
+    const text = document.getElementById('todo-text')?.value;
+    const time = document.getElementById('todo-time')?.value;
+    
+    if (!text) {
+        alert('Please enter a task');
+        return;
+    }
+    
+    const todo = {
+        id: Date.now(),
+        text: text,
+        time: time,
+        completed: false,
+        alarmTriggered: false
+    };
+    
+    todos.push(todo);
+    saveTodos();
+    renderTodos();
+    
+    document.getElementById('todo-text').value = '';
+    if (document.getElementById('todo-time')) document.getElementById('todo-time').value = '';
+    
+    // Check alarms immediately
+    checkAllAlarms();
+}
+
+function saveTodos() {
+    localStorage.setItem('todos', JSON.stringify(todos));
+}
+
+function renderTodos() {
+    const todoList = document.getElementById('todo-list');
+    if (!todoList) return;
+    
+    const sorted = [...todos].sort((a, b) => {
+        if (!a.time) return 1;
+        if (!b.time) return -1;
+        return new Date(a.time) - new Date(b.time);
+    });
+    
+    if (sorted.length === 0) {
+        todoList.innerHTML = '<p style="color: gray; text-align: center;">No tasks. Add one above!</p>';
+        return;
+    }
+    
+    todoList.innerHTML = sorted.map(todo => {
+        const isOverdue = todo.time && new Date(todo.time) < new Date() && !todo.completed;
+        return `
+            <div class="todo-item">
+                <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${todo.id})">
+                <span style="${todo.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''} ${isOverdue ? 'color: red; font-weight: bold;' : ''}">
+                    ${todo.text}
+                </span>
+                <small style="flex: 1;">${todo.time ? new Date(todo.time).toLocaleString() : 'No deadline'}</small>
+                ${isOverdue ? '<span style="color: red;">⚠️ OVERDUE</span>' : ''}
+                <button onclick="deleteTodo(${todo.id})" style="background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">❌</button>
+            </div>
+        `;
+    }).join('');
+}
+
+function toggleTodo(id) {
+    const todo = todos.find(t => t.id === id);
+    if (todo) {
+        todo.completed = !todo.completed;
+        saveTodos();
+        renderTodos();
+        if (todo.completed) {
+            addToCompletedHistory(`Task: ${todo.text}`);
+        }
+    }
+}
+
+function deleteTodo(id) {
+    todos = todos.filter(t => t.id !== id);
+    saveTodos();
+    renderTodos();
+}
+
+// CRITICAL: Check all alarms every minute
+function checkAllAlarms() {
+    const now = new Date();
+    
+    todos.forEach(todo => {
+        if (todo.time && !todo.completed && !todo.alarmTriggered) {
+            const alarmTime = new Date(todo.time);
+            const timeDiff = alarmTime - now;
+            
+            // If alarm time is within the last minute (or just passed)
+            if (timeDiff <= 0 && timeDiff > -60000) {
+                // Trigger alarm
+                todo.alarmTriggered = true;
+                saveTodos();
+                
+                // Play sound
+                const alarmSound = document.getElementById('alarm-sound');
+                if (alarmSound) {
+                    alarmSound.play().catch(e => console.log('Sound error:', e));
+                }
+                
+                // Show notification
+                showNotification('⏰ ALARM!', `Time to: ${todo.text}`);
+                
+                // Alert popup
+                alert(`🔔 ALARM: ${todo.text}`);
+                
+                // Also add to completed history if needed
+                addToCompletedHistory(`Alarm triggered: ${todo.text}`);
+            }
+        }
+    });
+    
+    // Also check for overdue tasks
+    todos.forEach(todo => {
+        if (todo.time && !todo.completed && new Date(todo.time) < now && !todo.overdueNotified) {
+            todo.overdueNotified = true;
+            saveTodos();
+            showNotification('⚠️ Overdue Task', `${todo.text} is overdue!`);
+        }
+    });
 }
 
 // ========== BAR GRAPH ==========
@@ -262,23 +470,29 @@ function renderBarGraph() {
         bar.style.background = day.completed ? 'linear-gradient(180deg, #4CAF50 0%, #45a049 100%)' : 'linear-gradient(180deg, #ddd 0%, #bbb 100%)';
         
         const label = document.createElement('div');
-        label.className = 'bar-label';
         label.textContent = day.dayName;
         label.style.marginTop = '5px';
         label.style.fontSize = '12px';
+        label.style.textAlign = 'center';
         
         barItem.appendChild(bar);
         barItem.appendChild(label);
         barGraph.appendChild(barItem);
     });
     
-    // Update weekly summary
+    // Update stats
     const completedCount = days.filter(d => d.completed).length;
     const rate = Math.round((completedCount / 7) * 100);
-    document.getElementById('completion-rate').textContent = `${rate}%`;
-    document.getElementById('total-completed').textContent = Object.values(streak.history).filter(v => v === true).length;
-    document.getElementById('best-streak').textContent = streak.bestStreak;
-    document.getElementById('streak-count').textContent = streak.count;
+    
+    const completionRateEl = document.getElementById('completion-rate');
+    const totalCompletedEl = document.getElementById('total-completed');
+    const bestStreakEl = document.getElementById('best-streak');
+    const streakCountEl = document.getElementById('streak-count');
+    
+    if (completionRateEl) completionRateEl.textContent = `${rate}%`;
+    if (totalCompletedEl) totalCompletedEl.textContent = Object.values(streak.history).filter(v => v === true).length;
+    if (bestStreakEl) bestStreakEl.textContent = streak.bestStreak;
+    if (streakCountEl) streakCountEl.textContent = streak.count;
     
     const summaryDiv = document.getElementById('weekly-summary');
     if (summaryDiv) {
@@ -288,20 +502,21 @@ function renderBarGraph() {
     // Streak message
     const streakMsg = document.getElementById('streak-message');
     if (streakMsg) {
-        if (streak.count === 0) streakMsg.textContent = 'Complete goals to start!';
-        else if (streak.count < 3) streakMsg.textContent = `${streak.count}/3 for first milestone!`;
-        else if (streak.count < 7) streakMsg.textContent = `🔥 ${streak.count} days! Keep going!`;
-        else streakMsg.textContent = `🏆 LEGENDARY ${streak.count} DAYS! 🏆`;
+        if (streak.count === 0) streakMsg.textContent = '✨ Complete today\'s goals to start! ✨';
+        else if (streak.count < 3) streakMsg.textContent = `🔥 ${streak.count}/3 days - Almost at first milestone!`;
+        else if (streak.count < 7) streakMsg.textContent = `🌟 ${streak.count} day streak! Keep going! 🌟`;
+        else if (streak.count < 14) streakMsg.textContent = `🏆 ${streak.count} day streak! You're on fire! 🏆`;
+        else streakMsg.textContent = `👑 LEGENDARY ${streak.count} DAY STREAK! 👑`;
     }
 }
 
-// ========== UPDATE ALL DISPLAYS ==========
 function updateAllDisplays() {
     renderBarGraph();
     renderHackathons();
     renderCompletedGoals();
     updateHabitDisplay();
     renderTodos();
+    checkAllAlarms(); // Check alarms on every update
 }
 
 // ========== NOTIFICATIONS ==========
@@ -314,6 +529,7 @@ if (notificationBtn) {
         if (permission === 'granted') {
             notificationPermission = true;
             notificationBtn.textContent = '✅ Notifications Enabled';
+            notificationBtn.style.background = '#4CAF50';
             localStorage.setItem('notifications', 'granted');
         }
     };
@@ -321,7 +537,10 @@ if (notificationBtn) {
 
 if (localStorage.getItem('notifications') === 'granted') {
     notificationPermission = true;
-    if (notificationBtn) notificationBtn.textContent = '✅ Notifications Enabled';
+    if (notificationBtn) {
+        notificationBtn.textContent = '✅ Notifications Enabled';
+        notificationBtn.style.background = '#4CAF50';
+    }
 }
 
 function showNotification(title, message) {
@@ -330,110 +549,31 @@ function showNotification(title, message) {
     }
 }
 
-// ========== TODO SYSTEM ==========
-let todos = JSON.parse(localStorage.getItem('todos')) || [];
-
-function addTodo() {
-    const text = document.getElementById('todo-text').value;
-    const time = document.getElementById('todo-time').value;
-    
-    if (!text) {
-        alert('Please enter a task');
-        return;
-    }
-    
-    todos.push({
-        id: Date.now(),
-        text: text,
-        time: time,
-        completed: false
-    });
-    
-    saveTodos();
-    renderTodos();
-    
-    if (time) setAlarm(text, time);
-    
-    document.getElementById('todo-text').value = '';
-    document.getElementById('todo-time').value = '';
-}
-
-function setAlarm(text, time) {
-    const alarmTime = new Date(time).getTime();
-    const now = new Date().getTime();
-    const timeUntil = alarmTime - now;
-    
-    if (timeUntil > 0 && timeUntil < 86400000) {
-        setTimeout(() => {
-            showNotification('⏰ ALARM!', `Time to: ${text}`);
-            alert(`🔔 ALARM: ${text}`);
-        }, timeUntil);
-    }
-}
-
-function saveTodos() {
-    localStorage.setItem('todos', JSON.stringify(todos));
-}
-
-function renderTodos() {
-    const todoList = document.getElementById('todo-list');
-    if (!todoList) return;
-    
-    const sorted = [...todos].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-    
-    if (sorted.length === 0) {
-        todoList.innerHTML = '<p style="color: gray; text-align: center;">No tasks. Add one above!</p>';
-        return;
-    }
-    
-    todoList.innerHTML = sorted.map(todo => `
-        <div class="todo-item">
-            <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${todo.id})">
-            <span style="${todo.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${todo.text}</span>
-            <small style="flex: 1;">${todo.time ? new Date(todo.time).toLocaleString() : 'No deadline'}</small>
-            <button onclick="deleteTodo(${todo.id})" class="btn-danger" style="padding: 5px 10px;">❌</button>
-        </div>
-    `).join('');
-}
-
-function toggleTodo(id) {
-    const todo = todos.find(t => t.id === id);
-    if (todo) {
-        todo.completed = !todo.completed;
-        saveTodos();
-        renderTodos();
-        if (todo.completed) addToCompletedHistory(`Task: ${todo.text}`);
-    }
-}
-
-function deleteTodo(id) {
-    todos = todos.filter(t => t.id !== id);
-    saveTodos();
-    renderTodos();
-}
-
 // ========== DAILY GOALS ==========
 function saveGoals() {
+    const goal1 = document.getElementById('goal1')?.value || '';
+    const goal2 = document.getElementById('goal2')?.value || '';
+    
     const goals = {
-        goal1: document.getElementById('goal1').value,
-        goal2: document.getElementById('goal2').value,
+        goal1: goal1,
+        goal2: goal2,
         date: new Date().toDateString()
     };
     localStorage.setItem('dailyGoals', JSON.stringify(goals));
-    alert('Goals saved!');
+    alert('Goals saved for today!');
 }
 
 function loadGoals() {
     const saved = JSON.parse(localStorage.getItem('dailyGoals'));
     if (saved && saved.date === new Date().toDateString()) {
-        if (saved.goal1) document.getElementById('goal1').value = saved.goal1;
-        if (saved.goal2) document.getElementById('goal2').value = saved.goal2;
+        if (saved.goal1 && document.getElementById('goal1')) document.getElementById('goal1').value = saved.goal1;
+        if (saved.goal2 && document.getElementById('goal2')) document.getElementById('goal2').value = saved.goal2;
     }
 }
 
 function completeDailyGoals() {
-    const goal1 = document.getElementById('goal1').value;
-    const goal2 = document.getElementById('goal2').value;
+    const goal1 = document.getElementById('goal1')?.value;
+    const goal2 = document.getElementById('goal2')?.value;
     
     if (!goal1 && !goal2) {
         alert('Please set your goals first!');
@@ -441,18 +581,28 @@ function completeDailyGoals() {
     }
     
     saveGoals();
-    updateStreak();
-    alert(`✅ Great job! Streak: ${streak.count} days! 🎉`);
+    const updated = updateStreak();
+    
+    if (updated) {
+        alert(`✅ Great job! You're on a ${streak.count} day streak! 🎉`);
+    }
 }
 
 // ========== INITIALIZE ==========
 function init() {
     initHistory();
+    checkAndUpdateStreakOnLoad();
     loadGoals();
     updateAllDisplays();
+    
+    // Check alarms every 30 seconds (not every minute for better accuracy)
     setInterval(() => {
-        renderHackathons();
-    }, 60000);
+        checkAllAlarms();
+        renderHackathons(); // Refresh hackathon display
+    }, 30000);
+    
+    console.log('App initialized! Alarms checking every 30 seconds.');
 }
 
+// Start the app
 init();
