@@ -1,46 +1,145 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Todo with Alarms & Streaks</title>
+    <title>My Todo with Streaks & Analytics</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body { 
-            font-family: Arial; 
-            max-width: 600px; 
-            margin: 50px auto; 
-            padding: 20px; 
-            background: #f5f5f5;
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
         }
         
         .container {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
         }
         
+        /* Streak Card */
         .streak-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
-            padding: 20px;
-            border-radius: 15px;
+            padding: 25px;
+            border-radius: 20px;
             text-align: center;
             margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
         
         .streak-number {
-            font-size: 48px;
+            font-size: 64px;
             font-weight: bold;
             margin: 10px 0;
-        }
-        
-        .streak-label {
-            font-size: 14px;
-            opacity: 0.9;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
         
         .fire-icon {
-            font-size: 32px;
+            font-size: 48px;
+            animation: bounce 1s ease infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* Graph Container */
+        .graph-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .graph-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .bar-graph {
+            display: flex;
+            align-items: flex-end;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            min-height: 250px;
+        }
+        
+        .bar-item {
+            flex: 1;
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        .bar {
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            height: 0px;
+            min-height: 5px;
+            border-radius: 10px;
+            transition: height 0.5s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .bar:hover {
+            opacity: 0.8;
+            transform: scaleX(1.05);
+        }
+        
+        .bar-label {
+            margin-top: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .bar-value {
+            font-size: 11px;
+            color: #667eea;
+            margin-top: 5px;
+        }
+        
+        /* Weekly Summary */
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .milestone {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+            animation: glow 1s ease-in-out;
+        }
+        
+        @keyframes glow {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Todo Items */
+        .todo-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         
         .todo-item { 
@@ -51,48 +150,62 @@
             padding: 10px;
             background: #f9f9f9;
             border-radius: 8px;
+            transition: transform 0.2s;
+        }
+        
+        .todo-item:hover {
+            transform: translateX(5px);
         }
         
         button { 
-            padding: 8px 15px; 
+            padding: 10px 20px; 
             cursor: pointer; 
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
         
         #notification-btn { 
             background: #4CAF50; 
             color: white; 
-            border: none; 
-            padding: 12px;
             width: 100%;
             margin-bottom: 10px;
             font-size: 16px;
         }
         
-        .alarm { 
-            background: #ff9800; 
+        input[type="text"], input[type="datetime-local"] { 
+            padding: 12px; 
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: border 0.3s;
         }
         
-        input[type="text"], input[type="datetime-local"] { 
-            padding: 10px; 
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .add-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
         }
         
         .goals-section {
-            background: #f0f0f0;
-            padding: 15px;
-            border-radius: 10px;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 20px;
+            border-radius: 15px;
             margin-top: 20px;
-        }
-        
-        .goal-input {
-            width: 100%;
-            margin: 5px 0;
-            padding: 8px;
         }
         
         .complete-btn {
@@ -100,58 +213,94 @@
             color: white;
         }
         
-        .delete-btn {
-            background: #f44336;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
         }
         
-        .sound-toggle {
-            background: #2196F3;
-            color: white;
-            padding: 5px 10px;
-            font-size: 12px;
-            margin-left: 10px;
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
         }
         
-        @keyframes fireAnimation {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.1); }
-        }
-        
-        .fire-animation {
-            animation: fireAnimation 0.5s ease-in-out;
+        @media (max-width: 600px) {
+            .bar-item {
+                min-width: 35px;
+            }
+            .bar-label {
+                font-size: 10px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📋 Todo with Streaks & Alarms</h1>
-        
+        <!-- Streak Card -->
         <div class="streak-card">
             <div class="fire-icon">🔥</div>
             <div class="streak-number" id="streak-count">0</div>
-            <div class="streak-label">Day Streak</div>
-            <div style="font-size: 12px; margin-top: 5px;" id="last-completed">Complete your goals to maintain streak!</div>
+            <div style="font-size: 18px; margin-bottom: 5px;">Day Streak</div>
+            <div id="streak-message" style="font-size: 14px; opacity: 0.9;"></div>
+            <div style="font-size: 12px; margin-top: 10px;" id="last-completed"></div>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-number" id="total-completed">0</div>
+                <div>Tasks Completed</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="best-streak">0</div>
+                <div>Best Streak</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="completion-rate">0%</div>
+                <div>Completion Rate</div>
+            </div>
+        </div>
+        
+        <!-- Bar Graph -->
+        <div class="graph-container">
+            <div class="graph-title">📊 Weekly Progress (Last 7 Days)</div>
+            <div class="bar-graph" id="bar-graph"></div>
+        </div>
+        
+        <!-- Weekly Summary -->
+        <div class="summary-card" id="weekly-summary">
+            <div class="graph-title">📅 Weekly Summary</div>
+            <div id="summary-text"></div>
         </div>
         
         <button id="notification-btn">🔔 Enable Notifications</button>
         
-        <div style="margin: 20px 0;">
-            <input type="text" id="todo-text" placeholder="What to do?" style="width: 100%; margin-bottom: 10px;">
-            <input type="datetime-local" id="todo-time" style="width: 100%; margin-bottom: 10px;">
-            <button onclick="addTodo()" style="width: 100%; background: #4CAF50; color: white;">➕ Add Task</button>
+        <!-- Todo Section -->
+        <div class="todo-card">
+            <h3>📝 Add New Task</h3>
+            <input type="text" id="todo-text" placeholder="What to do?">
+            <input type="datetime-local" id="todo-time">
+            <button onclick="addTodo()" class="add-btn">➕ Add Task</button>
         </div>
         
         <div id="todo-list"></div>
         
+        <!-- Goals Section -->
         <div class="goals-section">
             <h3>📚 Today's Study Goals</h3>
-            <div id="daily-goals">
-                <input type="text" placeholder="Goal 1 (e.g., Read 2 chapters)" id="goal1" class="goal-input">
-                <input type="text" placeholder="Goal 2 (e.g., Practice coding)" id="goal2" class="goal-input">
-                <button onclick="completeDailyGoals()" id="complete-goals-btn" style="width: 100%; margin-top: 10px; background: #4CAF50; color: white;">✅ Complete Today's Goals</button>
-                <button onclick="saveGoals()" style="width: 100%; margin-top: 5px; background: #666; color: white;">💾 Save Goals</button>
-            </div>
+            <input type="text" placeholder="Goal 1 (e.g., Read 2 chapters)" id="goal1" style="margin-bottom: 10px;">
+            <input type="text" placeholder="Goal 2 (e.g., Practice coding)" id="goal2" style="margin-bottom: 10px;">
+            <button onclick="completeDailyGoals()" class="complete-btn" style="width: 100%; margin-bottom: 5px;">✅ Complete Today's Goals</button>
+            <button onclick="saveGoals()" style="width: 100%; background: #666; color: white;">💾 Save Goals</button>
         </div>
     </div>
 
