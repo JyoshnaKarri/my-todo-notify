@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Todo with Streaks & Analytics</title>
+    <title>Ultimate Productivity Suite | Streaks & Hackathons</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         * {
@@ -18,26 +18,46 @@
         }
         
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
+        }
+        
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            border-left: 4px solid #667eea;
+            padding-left: 10px;
         }
         
         /* Streak Card */
         .streak-card {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
-            padding: 25px;
-            border-radius: 20px;
             text-align: center;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
         
         .streak-number {
             font-size: 64px;
             font-weight: bold;
             margin: 10px 0;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
         
         .fire-icon {
@@ -50,34 +70,38 @@
             50% { transform: translateY(-10px); }
         }
         
-        /* Graph Container */
-        .graph-container {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
         }
         
-        .graph-title {
-            font-size: 18px;
+        .stat-box {
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
             font-weight: bold;
-            margin-bottom: 15px;
-            color: #333;
         }
         
+        /* Bar Graph */
         .bar-graph {
             display: flex;
             align-items: flex-end;
-            gap: 15px;
+            gap: 10px;
             justify-content: center;
-            flex-wrap: wrap;
-            min-height: 250px;
+            min-height: 200px;
+            margin: 20px 0;
         }
         
         .bar-item {
             flex: 1;
-            min-width: 50px;
             text-align: center;
         }
         
@@ -87,61 +111,93 @@
             min-height: 5px;
             border-radius: 10px;
             transition: height 0.5s ease;
+        }
+        
+        /* Habit Tracker */
+        .habit-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            margin: 10px 0;
+            background: #f5f5f5;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .habit-name {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .habit-checkbox {
+            width: 24px;
+            height: 24px;
             cursor: pointer;
-            position: relative;
         }
         
-        .bar:hover {
-            opacity: 0.8;
-            transform: scaleX(1.05);
+        .habit-streak {
+            font-size: 12px;
+            color: #667eea;
         }
         
-        .bar-label {
-            margin-top: 10px;
+        /* Hackathon Table */
+        .hackathon-table {
+            width: 100%;
+            overflow-x: auto;
+        }
+        
+        .hackathon-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: 10px;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f9f9f9;
+            border-radius: 8px;
+            align-items: center;
+        }
+        
+        .hackathon-header {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 5px;
             font-size: 12px;
             font-weight: bold;
-            color: #555;
-        }
-        
-        .bar-value {
-            font-size: 11px;
-            color: #667eea;
-            margin-top: 5px;
-        }
-        
-        /* Weekly Summary */
-        .summary-card {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .milestone {
-            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 10px 0;
             text-align: center;
-            font-weight: bold;
-            animation: glow 1s ease-in-out;
         }
         
-        @keyframes glow {
-            0% { transform: scale(0.9); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+        .status-upcoming { background: #2196F3; color: white; }
+        .status-participating { background: #ff9800; color: white; }
+        .status-completed { background: #4CAF50; color: white; }
+        
+        /* Completed Goals List */
+        .completed-goal-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: #e8f5e9;
+            border-radius: 5px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .goal-date {
+            font-size: 11px;
+            color: #666;
         }
         
         /* Todo Items */
-        .todo-card {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
         .todo-item { 
             display: flex; 
             gap: 10px; 
@@ -150,19 +206,13 @@
             padding: 10px;
             background: #f9f9f9;
             border-radius: 8px;
-            transition: transform 0.2s;
-        }
-        
-        .todo-item:hover {
-            transform: translateX(5px);
         }
         
         button { 
-            padding: 10px 20px; 
+            padding: 8px 15px; 
             cursor: pointer; 
             border: none;
             border-radius: 8px;
-            font-size: 14px;
             font-weight: bold;
             transition: all 0.3s;
         }
@@ -172,22 +222,11 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
         
-        #notification-btn { 
-            background: #4CAF50; 
-            color: white; 
-            width: 100%;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-        
-        input[type="text"], input[type="datetime-local"] { 
-            padding: 12px; 
+        input, select {
+            padding: 10px;
             border: 2px solid #ddd;
             border-radius: 8px;
             font-size: 14px;
-            width: 100%;
-            margin-bottom: 10px;
-            transition: border 0.3s;
         }
         
         input:focus {
@@ -195,111 +234,140 @@
             border-color: #667eea;
         }
         
-        .add-btn {
+        .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            width: 100%;
         }
         
-        .goals-section {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-        }
-        
-        .complete-btn {
+        .btn-success {
             background: #4CAF50;
             color: white;
         }
         
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .stat-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .btn-danger {
+            background: #f44336;
             color: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
         }
         
-        .stat-number {
-            font-size: 28px;
-            font-weight: bold;
-        }
-        
-        @media (max-width: 600px) {
-            .bar-item {
-                min-width: 35px;
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
             }
-            .bar-label {
-                font-size: 10px;
+            .hackathon-row {
+                grid-template-columns: 1fr;
+                gap: 5px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Streak Card -->
-        <div class="streak-card">
-            <div class="fire-icon">🔥</div>
-            <div class="streak-number" id="streak-count">0</div>
-            <div style="font-size: 18px; margin-bottom: 5px;">Day Streak</div>
-            <div id="streak-message" style="font-size: 14px; opacity: 0.9;"></div>
-            <div style="font-size: 12px; margin-top: 10px;" id="last-completed"></div>
-        </div>
-        
-        <!-- Statistics -->
-        <div class="stats-grid">
-            <div class="stat-box">
-                <div class="stat-number" id="total-completed">0</div>
-                <div>Tasks Completed</div>
+        <!-- Top Row: Streak + Stats -->
+        <div class="dashboard-grid">
+            <!-- Streak Card -->
+            <div class="card streak-card">
+                <div class="fire-icon">🔥</div>
+                <div class="streak-number" id="streak-count">0</div>
+                <div style="font-size: 18px;">Day Streak</div>
+                <div id="streak-message" style="font-size: 12px; margin-top: 10px;"></div>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-number" id="best-streak">0</div>
+                        <div style="font-size: 12px;">Best</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="total-completed">0</div>
+                        <div style="font-size: 12px;">Total Days</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="completion-rate">0%</div>
+                        <div style="font-size: 12px;">This Week</div>
+                    </div>
+                </div>
             </div>
-            <div class="stat-box">
-                <div class="stat-number" id="best-streak">0</div>
-                <div>Best Streak</div>
+            
+            <!-- Weekly Progress Graph -->
+            <div class="card">
+                <div class="card-title">📊 Weekly Progress</div>
+                <div class="bar-graph" id="bar-graph"></div>
+                <div id="weekly-summary" style="text-align: center; font-size: 14px;"></div>
             </div>
-            <div class="stat-box">
-                <div class="stat-number" id="completion-rate">0%</div>
-                <div>Completion Rate</div>
+        </div>
+        
+        <!-- Middle Row: Habits + Hackathons -->
+        <div class="dashboard-grid">
+            <!-- Daily Habits Block -->
+            <div class="card">
+                <div class="card-title">✅ Daily Habits (10 mins each)</div>
+                <div id="habits-list">
+                    <div class="habit-item">
+                        <div class="habit-name">
+                            <span>🎯 Unstop</span>
+                            <span class="habit-streak" id="unstop-streak">Streak: 0</span>
+                        </div>
+                        <input type="checkbox" id="habit-unstop" onchange="toggleHabit('unstop')">
+                    </div>
+                    <div class="habit-item">
+                        <div class="habit-name">
+                            <span>💼 LinkedIn</span>
+                            <span class="habit-streak" id="linkedin-streak">Streak: 0</span>
+                        </div>
+                        <input type="checkbox" id="habit-linkedin" onchange="toggleHabit('linkedin')">
+                    </div>
+                    <div class="habit-item">
+                        <div class="habit-name">
+                            <span>📧 Gmail</span>
+                            <span class="habit-streak" id="gmail-streak">Streak: 0</span>
+                        </div>
+                        <input type="checkbox" id="habit-gmail" onchange="toggleHabit('gmail')">
+                    </div>
+                </div>
+                <button onclick="saveHabits()" class="btn-primary" style="width: 100%; margin-top: 10px;">💾 Save Today's Habits</button>
+            </div>
+            
+            <!-- Hackathon Tracker -->
+            <div class="card">
+                <div class="card-title">🏆 Hackathon Tracker</div>
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="hack-name" placeholder="Hackathon Name" style="width: 100%; margin-bottom: 5px;">
+                    <input type="date" id="hack-deadline" style="width: 100%; margin-bottom: 5px;">
+                    <select id="hack-status" style="width: 100%; margin-bottom: 5px;">
+                        <option value="upcoming">📅 Upcoming</option>
+                        <option value="participating">💻 Participating</option>
+                        <option value="completed">🏆 Completed</option>
+                    </select>
+                    <button onclick="addHackathon()" class="btn-primary" style="width: 100%;">➕ Add Hackathon</button>
+                </div>
+                <div id="hackathon-list"></div>
             </div>
         </div>
         
-        <!-- Bar Graph -->
-        <div class="graph-container">
-            <div class="graph-title">📊 Weekly Progress (Last 7 Days)</div>
-            <div class="bar-graph" id="bar-graph"></div>
+        <!-- Bottom Row: Todo + Completed Goals -->
+        <div class="dashboard-grid">
+            <!-- Todo Section -->
+            <div class="card">
+                <div class="card-title">📝 Tasks & Alarms</div>
+                <button id="notification-btn" class="btn-success" style="width: 100%; margin-bottom: 10px;">🔔 Enable Notifications</button>
+                <input type="text" id="todo-text" placeholder="What to do?" style="width: 100%; margin-bottom: 5px;">
+                <input type="datetime-local" id="todo-time" style="width: 100%; margin-bottom: 5px;">
+                <button onclick="addTodo()" class="btn-primary" style="width: 100%;">➕ Add Task</button>
+                <div id="todo-list" style="margin-top: 15px; max-height: 300px; overflow-y: auto;"></div>
+            </div>
+            
+            <!-- Completed Goals Column -->
+            <div class="card">
+                <div class="card-title">🏅 Completed Goals History</div>
+                <div id="completed-goals-list" style="max-height: 400px; overflow-y: auto;"></div>
+                <button onclick="clearCompletedHistory()" class="btn-danger" style="width: 100%; margin-top: 10px;">🗑️ Clear History</button>
+            </div>
         </div>
         
-        <!-- Weekly Summary -->
-        <div class="summary-card" id="weekly-summary">
-            <div class="graph-title">📅 Weekly Summary</div>
-            <div id="summary-text"></div>
-        </div>
-        
-        <button id="notification-btn">🔔 Enable Notifications</button>
-        
-        <!-- Todo Section -->
-        <div class="todo-card">
-            <h3>📝 Add New Task</h3>
-            <input type="text" id="todo-text" placeholder="What to do?">
-            <input type="datetime-local" id="todo-time">
-            <button onclick="addTodo()" class="add-btn">➕ Add Task</button>
-        </div>
-        
-        <div id="todo-list"></div>
-        
-        <!-- Goals Section -->
-        <div class="goals-section">
-            <h3>📚 Today's Study Goals</h3>
-            <input type="text" placeholder="Goal 1 (e.g., Read 2 chapters)" id="goal1" style="margin-bottom: 10px;">
-            <input type="text" placeholder="Goal 2 (e.g., Practice coding)" id="goal2" style="margin-bottom: 10px;">
-            <button onclick="completeDailyGoals()" class="complete-btn" style="width: 100%; margin-bottom: 5px;">✅ Complete Today's Goals</button>
+        <!-- Today's Goals Section -->
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-title">📚 Today's Study Goals</div>
+            <input type="text" placeholder="Goal 1" id="goal1" style="width: 100%; margin-bottom: 5px;">
+            <input type="text" placeholder="Goal 2" id="goal2" style="width: 100%; margin-bottom: 5px;">
+            <button onclick="completeDailyGoals()" class="btn-success" style="width: 100%; margin-bottom: 5px;">✅ Complete Today's Goals</button>
             <button onclick="saveGoals()" style="width: 100%; background: #666; color: white;">💾 Save Goals</button>
         </div>
     </div>
