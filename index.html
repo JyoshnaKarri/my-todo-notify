@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Ultimate Productivity Suite | Streaks & Hackathons</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>TooDoo Killer | Ultimate Productivity Suite</title>
     <style>
         * {
             margin: 0;
@@ -10,16 +11,76 @@
             box-sizing: border-box;
         }
         
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            transition: background 0.3s ease;
+        }
+        
+        /* Dark Mode */
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        body.dark-mode .card {
+            background: #1e1e2e;
+            color: #eee;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        body.dark-mode .todo-item,
+        body.dark-mode .habit-item,
+        body.dark-mode .hackathon-row {
+            background: #2a2a3a;
+            color: #eee;
+        }
+        
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea {
+            background: #2a2a3a;
+            color: #eee;
+            border-color: #444;
+        }
+        
+        body.dark-mode input:focus,
+        body.dark-mode select:focus {
+            border-color: #667eea;
+        }
+        
+        body.dark-mode .completed-goal-item {
+            background: #2a2a3a;
+            color: #eee;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
+        }
+        
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            border-left: 4px solid #667eea;
+            padding-left: 12px;
+        }
+        
+        body.dark-mode .card-title {
+            color: #eee;
         }
         
         /* Grid Layout */
@@ -30,28 +91,15 @@
             margin-bottom: 20px;
         }
         
-        /* Cards */
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .card-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #333;
-            border-left: 4px solid #667eea;
-            padding-left: 10px;
-        }
-        
         /* Streak Card */
         .streak-card {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
             text-align: center;
+        }
+        
+        body.dark-mode .streak-card {
+            background: linear-gradient(135deg, #e55d87 0%, #5fc3e0 100%);
         }
         
         .streak-number {
@@ -113,7 +161,53 @@
             transition: height 0.5s ease;
         }
         
-        /* Habit Tracker */
+        /* Calendar */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            text-align: center;
+        }
+        
+        .calendar-day {
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .calendar-day.completed {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .calendar-day.missed {
+            background: #f44336;
+            color: white;
+        }
+        
+        .calendar-day.today {
+            border: 2px solid #667eea;
+            font-weight: bold;
+        }
+        
+        /* Todo Items */
+        .todo-item {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            align-items: center;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            transition: transform 0.2s;
+        }
+        
+        .todo-item:hover {
+            transform: translateX(5px);
+        }
+        
+        /* Habit Items */
         .habit-item {
             display: flex;
             align-items: center;
@@ -153,10 +247,10 @@
             display: grid;
             grid-template-columns: 2fr 1fr 1fr 1fr auto;
             gap: 10px;
-            padding: 10px;
-            margin: 5px 0;
+            padding: 12px;
+            margin: 8px 0;
             background: #f9f9f9;
-            border-radius: 8px;
+            border-radius: 10px;
             align-items: center;
         }
         
@@ -164,32 +258,37 @@
             background: #667eea;
             color: white;
             font-weight: bold;
-            padding: 10px;
-            border-radius: 8px;
+            border-radius: 10px;
             margin-bottom: 10px;
         }
         
+        body.dark-mode .hackathon-header {
+            background: #4a55a2;
+        }
+        
         .status-badge {
-            padding: 4px 8px;
-            border-radius: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
             font-size: 12px;
             font-weight: bold;
             text-align: center;
+            display: inline-block;
         }
         
         .status-upcoming { background: #2196F3; color: white; }
         .status-participating { background: #ff9800; color: white; }
         .status-completed { background: #4CAF50; color: white; }
         
-        /* Completed Goals List */
+        /* Completed Goals */
         .completed-goal-item {
-            padding: 8px;
-            margin: 5px 0;
+            padding: 10px;
+            margin: 8px 0;
             background: #e8f5e9;
-            border-radius: 5px;
+            border-radius: 8px;
             font-size: 14px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
         
         .goal-date {
@@ -197,41 +296,40 @@
             color: #666;
         }
         
-        /* Todo Items */
-        .todo-item { 
-            display: flex; 
-            gap: 10px; 
-            margin: 10px 0; 
-            align-items: center; 
-            padding: 10px;
-            background: #f9f9f9;
-            border-radius: 8px;
+        /* Pomodoro Timer */
+        .timer-display {
+            font-size: 64px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px;
+            font-family: monospace;
         }
         
-        button { 
-            padding: 8px 15px; 
-            cursor: pointer; 
+        .timer-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        /* Buttons */
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
+            font-size: 14px;
             font-weight: bold;
             transition: all 0.3s;
         }
         
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         
-        input, select {
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        
-        input:focus {
-            outline: none;
-            border-color: #667eea;
+        button:active {
+            transform: translateY(0);
         }
         
         .btn-primary {
@@ -249,15 +347,102 @@
             color: white;
         }
         
+        .btn-warning {
+            background: #ff9800;
+            color: white;
+        }
+        
+        /* Inputs */
+        input, select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        /* Dark Mode Toggle Button */
+        .dark-mode-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #333;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .dark-mode-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Responsive */
         @media (max-width: 768px) {
             .dashboard-grid {
                 grid-template-columns: 1fr;
             }
+            
             .hackathon-row {
                 grid-template-columns: 1fr;
-                gap: 5px;
+                gap: 8px;
+            }
+            
+            .hackathon-header {
+                display: none;
+            }
+            
+            .calendar-grid {
+                gap: 4px;
+            }
+            
+            .calendar-day {
+                padding: 6px;
+                font-size: 10px;
+            }
+            
+            .timer-display {
+                font-size: 48px;
+            }
+            
+            .streak-number {
+                font-size: 48px;
             }
         }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+        
+        /* Utility */
+        .text-center { text-align: center; }
+        .mt-10 { margin-top: 10px; }
+        .mb-10 { margin-bottom: 10px; }
+        .w-100 { width: 100%; }
     </style>
 </head>
 <body>
@@ -290,41 +475,42 @@
             <div class="card">
                 <div class="card-title">📊 Weekly Progress</div>
                 <div class="bar-graph" id="bar-graph"></div>
-                <div id="weekly-summary" style="text-align: center; font-size: 14px;"></div>
+                <div id="weekly-summary" class="text-center" style="font-size: 14px;"></div>
             </div>
         </div>
-
-
-<div class="card">
-    <div class="card-title">📅 Calendar View</div>
-    <div id="calendar" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center;"></div>
-    <div style="margin-top: 10px; font-size: 12px; color: #666;">
-        ✅ Green = Completed | ❌ Red = Missed | ⚪ No data
-    </div>
-</div>
-
         
-        <div class="card">
-    <div class="card-title">🍅 Pomodoro Timer</div>
-    <div style="text-align: center;">
-        <div id="timer-display" style="font-size: 48px; font-weight: bold; margin: 20px;">25:00</div>
-        <div style="display: flex; gap: 10px; justify-content: center;">
-            <button id="start-timer" class="btn-success">▶ Start</button>
-            <button id="pause-timer" class="btn-warning">⏸ Pause</button>
-            <button id="reset-timer" class="btn-danger">🔄 Reset</button>
+        <!-- Calendar + Pomodoro Row -->
+        <div class="dashboard-grid">
+            <!-- Calendar View -->
+            <div class="card">
+                <div class="card-title">📅 Calendar View</div>
+                <div id="calendar" class="calendar-grid"></div>
+                <div class="text-center mt-10" style="font-size: 12px; color: #666;">
+                    ✅ Green = Completed | ❌ Red = Missed | ⚪ No data
+                </div>
+            </div>
+            
+            <!-- Pomodoro Timer -->
+            <div class="card">
+                <div class="card-title">🍅 Pomodoro Timer</div>
+                <div class="timer-display" id="timer-display">25:00</div>
+                <div class="timer-controls">
+                    <button id="start-timer" class="btn-success">▶ Start</button>
+                    <button id="pause-timer" class="btn-warning">⏸ Pause</button>
+                    <button id="reset-timer" class="btn-danger">🔄 Reset</button>
+                </div>
+                <select id="timer-select" class="mt-10">
+                    <option value="25">25:00 - Focus Session</option>
+                    <option value="5">05:00 - Short Break</option>
+                    <option value="15">15:00 - Long Break</option>
+                </select>
+                <div class="text-center mt-10" style="font-size: 12px; color: #666;">
+                    ✅ Complete a pomodoro = +1 to streak!
+                </div>
+            </div>
         </div>
-        <select id="timer-select" style="margin-top: 10px; padding: 5px;">
-            <option value="25">25 min (Focus)</option>
-            <option value="5">5 min (Short Break)</option>
-            <option value="15">15 min (Long Break)</option>
-        </select>
-        <div style="margin-top: 10px; font-size: 12px; color: #666;">
-            ✅ Completing a pomodoro = +5 points to streak
-        </div>
-    </div>
-</div>
         
-        <!-- Middle Row: Habits + Hackathons -->
+        <!-- Habits + Hackathons Row -->
         <div class="dashboard-grid">
             <!-- Daily Habits Block -->
             <div class="card">
@@ -335,73 +521,91 @@
                             <span>🎯 Unstop</span>
                             <span class="habit-streak" id="unstop-streak">Streak: 0</span>
                         </div>
-                        <input type="checkbox" id="habit-unstop" onchange="toggleHabit('unstop')">
+                        <input type="checkbox" id="habit-unstop" class="habit-checkbox" onchange="toggleHabit('unstop')">
                     </div>
                     <div class="habit-item">
                         <div class="habit-name">
                             <span>💼 LinkedIn</span>
                             <span class="habit-streak" id="linkedin-streak">Streak: 0</span>
                         </div>
-                        <input type="checkbox" id="habit-linkedin" onchange="toggleHabit('linkedin')">
+                        <input type="checkbox" id="habit-linkedin" class="habit-checkbox" onchange="toggleHabit('linkedin')">
                     </div>
                     <div class="habit-item">
                         <div class="habit-name">
                             <span>📧 Gmail</span>
                             <span class="habit-streak" id="gmail-streak">Streak: 0</span>
                         </div>
-                        <input type="checkbox" id="habit-gmail" onchange="toggleHabit('gmail')">
+                        <input type="checkbox" id="habit-gmail" class="habit-checkbox" onchange="toggleHabit('gmail')">
                     </div>
                 </div>
-                <button onclick="saveHabits()" class="btn-primary" style="width: 100%; margin-top: 10px;">💾 Save Today's Habits</button>
+                <button onclick="saveHabits()" class="btn-primary w-100 mt-10">💾 Save Today's Habits</button>
             </div>
             
             <!-- Hackathon Tracker -->
             <div class="card">
                 <div class="card-title">🏆 Hackathon Tracker</div>
                 <div style="margin-bottom: 15px;">
-                    <input type="text" id="hack-name" placeholder="Hackathon Name" style="width: 100%; margin-bottom: 5px;">
-                    <input type="date" id="hack-deadline" style="width: 100%; margin-bottom: 5px;">
-                    <select id="hack-status" style="width: 100%; margin-bottom: 5px;">
+                    <input type="text" id="hack-name" placeholder="Hackathon Name" class="mb-10">
+                    <input type="date" id="hack-deadline" class="mb-10">
+                    <select id="hack-status" class="mb-10">
                         <option value="upcoming">📅 Upcoming</option>
                         <option value="participating">💻 Participating</option>
                         <option value="completed">🏆 Completed</option>
                     </select>
-                    <button onclick="addHackathon()" class="btn-primary" style="width: 100%;">➕ Add Hackathon</button>
+                    <button onclick="addHackathon()" class="btn-primary w-100">➕ Add Hackathon</button>
                 </div>
                 <div id="hackathon-list"></div>
             </div>
         </div>
         
-        <!-- Bottom Row: Todo + Completed Goals -->
+        <!-- Todo + Completed Goals Row -->
         <div class="dashboard-grid">
             <!-- Todo Section -->
             <div class="card">
                 <div class="card-title">📝 Tasks & Alarms</div>
-                <button id="notification-btn" class="btn-success" style="width: 100%; margin-bottom: 10px;">🔔 Enable Notifications</button>
-                <input type="text" id="todo-text" placeholder="What to do?" style="width: 100%; margin-bottom: 5px;">
-                <input type="datetime-local" id="todo-time" style="width: 100%; margin-bottom: 5px;">
-                <button onclick="addTodo()" class="btn-primary" style="width: 100%;">➕ Add Task</button>
+                <button id="notification-btn" class="btn-success w-100 mb-10">🔔 Enable Notifications</button>
+                <input type="text" id="todo-text" placeholder="What to do?" class="mb-10">
+                <input type="datetime-local" id="todo-time" class="mb-10">
+                <button onclick="addTodo()" class="btn-primary w-100">➕ Add Task</button>
                 <div id="todo-list" style="margin-top: 15px; max-height: 300px; overflow-y: auto;"></div>
             </div>
             
             <!-- Completed Goals Column -->
             <div class="card">
                 <div class="card-title">🏅 Completed Goals History</div>
-                <div id="completed-goals-list" style="max-height: 400px; overflow-y: auto;"></div>
-                <button onclick="clearCompletedHistory()" class="btn-danger" style="width: 100%; margin-top: 10px;">🗑️ Clear History</button>
+                <div id="completed-goals-list" style="max-height: 300px; overflow-y: auto;"></div>
+                <button onclick="clearCompletedHistory()" class="btn-danger w-100 mt-10">🗑️ Clear History</button>
             </div>
         </div>
         
-        <!-- Today's Goals Section -->
-        <div class="card" style="margin-top: 20px;">
-            <div class="card-title">📚 Today's Study Goals</div>
-            <input type="text" placeholder="Goal 1" id="goal1" style="width: 100%; margin-bottom: 5px;">
-            <input type="text" placeholder="Goal 2" id="goal2" style="width: 100%; margin-bottom: 5px;">
-            <button onclick="completeDailyGoals()" class="btn-success" style="width: 100%; margin-bottom: 5px;">✅ Complete Today's Goals</button>
-            <button onclick="saveGoals()" style="width: 100%; background: #666; color: white;">💾 Save Goals</button>
+        <!-- Today's Goals + Settings Row -->
+        <div class="dashboard-grid">
+            <!-- Today's Goals Section -->
+            <div class="card">
+                <div class="card-title">📚 Today's Study Goals</div>
+                <input type="text" placeholder="Goal 1" id="goal1" class="mb-10">
+                <input type="text" placeholder="Goal 2" id="goal2" class="mb-10">
+                <button onclick="completeDailyGoals()" class="btn-success w-100 mb-10">✅ Complete Today's Goals</button>
+                <button onclick="saveGoals()" class="btn-primary w-100">💾 Save Goals</button>
+            </div>
+            
+            <!-- Settings Panel -->
+            <div class="card">
+                <div class="card-title">⚙️ Settings & Data</div>
+                <button id="export-data" class="btn-primary w-100 mb-10">📤 Export All Data (JSON)</button>
+                <button id="import-data" class="btn-primary w-100 mb-10">📥 Import Data</button>
+                <input type="file" id="import-file" accept=".json" style="display: none;">
+                <button id="clear-all" class="btn-danger w-100">⚠️ Clear All Data</button>
+                <div class="text-center mt-10" style="font-size: 11px; color: #666;">
+                    Version 3.0 | Built with 🔥
+                </div>
+            </div>
         </div>
     </div>
-
+    
+    <!-- Dark Mode Toggle -->
+    <button class="dark-mode-toggle" id="dark-mode-toggle">🌙</button>
+    
     <audio id="alarm-sound" preload="auto">
         <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
     </audio>
