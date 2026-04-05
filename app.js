@@ -291,6 +291,61 @@ function renderHackathons() {
     checkHackathonDeadlines(now);
 }
 
+
+// ========== CALENDAR VIEW ==========
+function renderCalendar() {
+    const calendar = document.getElementById('calendar');
+    if (!calendar) return;
+    
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    
+    let calendarHTML = '<div style="font-weight: bold; grid-column: span 7; margin-bottom: 10px;">';
+    calendarHTML += today.toLocaleString('default', { month: 'long' }) + ' ' + currentYear;
+    calendarHTML += '</div>';
+    
+    // Day labels
+    ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+        calendarHTML += `<div style="font-weight: bold; font-size: 12px;">${day}</div>`;
+    });
+    
+    // Empty cells for days before month starts
+    for (let i = 0; i < firstDay; i++) {
+        calendarHTML += '<div></div>';
+    }
+    
+    // Fill in days
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = `${currentYear}-${(currentMonth+1).toString().padStart(2,'0')}-${day.toString().padStart(2,'0')}`;
+        const completed = streak.history[dateKey] || false;
+        const isToday = day === today.getDate() && currentMonth === today.getMonth();
+        
+        let bgColor = '#f0f0f0';
+        if (completed) bgColor = '#4CAF50';
+        else if (streak.history[dateKey] === false && dateKey !== today.toISOString().split('T')[0]) bgColor = '#f44336';
+        
+        calendarHTML += `
+            <div style="
+                background: ${bgColor};
+                padding: 8px;
+                border-radius: 5px;
+                font-weight: ${isToday ? 'bold' : 'normal'};
+                border: ${isToday ? '2px solid #667eea' : 'none'};
+                color: ${completed || bgColor === '#f0f0f0' ? '#333' : 'white'};
+            ">
+                ${day}
+            </div>
+        `;
+    }
+    
+    calendar.innerHTML = calendarHTML;
+}
+
+// Call renderCalendar() in your init() function
+
 function checkHackathonDeadlines(now) {
     hackathons.forEach(hack => {
         const deadlineDate = new Date(hack.deadline);
