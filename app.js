@@ -604,5 +604,75 @@ function init() {
     console.log('App initialized! Alarms checking every 30 seconds.');
 }
 
+
+
+// ========== POMODORO TIMER ==========
+let timerInterval = null;
+let timeLeft = 25 * 60; // 25 minutes in seconds
+let isRunning = false;
+
+function updateTimerDisplay() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const timerDisplay = document.getElementById('timer-display');
+    if (timerDisplay) timerDisplay.textContent = display;
+    
+    // Change color when less than 1 minute
+    if (timeLeft < 60) {
+        timerDisplay.style.color = '#f44336';
+    } else {
+        timerDisplay.style.color = '#333';
+    }
+}
+
+function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    isRunning = true;
+    timerInterval = setInterval(() => {
+        if (timeLeft > 0 && isRunning) {
+            timeLeft--;
+            updateTimerDisplay();
+        } else if (timeLeft === 0) {
+            // Timer finished!
+            clearInterval(timerInterval);
+            isRunning = false;
+            showNotification('🍅 Pomodoro Complete!', 'Time for a break!');
+            alert('🎉 Pomodoro completed! Great focus session!');
+            
+            // Reward: Add to completed goals
+            addToCompletedHistory('Pomodoro Session');
+            
+            // Play sound
+            const alarmSound = document.getElementById('alarm-sound');
+            if (alarmSound) alarmSound.play();
+        }
+    }, 1000);
+}
+
+function pauseTimer() {
+    isRunning = false;
+}
+
+function resetTimer() {
+    clearInterval(timerInterval);
+    isRunning = false;
+    const selectedTime = parseInt(document.getElementById('timer-select').value);
+    timeLeft = selectedTime * 60;
+    updateTimerDisplay();
+}
+
+// Event listeners
+const startBtn = document.getElementById('start-timer');
+const pauseBtn = document.getElementById('pause-timer');
+const resetBtn = document.getElementById('reset-timer');
+const timerSelect = document.getElementById('timer-select');
+
+if (startBtn) startBtn.onclick = startTimer;
+if (pauseBtn) pauseBtn.onclick = pauseTimer;
+if (resetBtn) resetBtn.onclick = resetTimer;
+if (timerSelect) timerSelect.onchange = resetTimer;
+
+updateTimerDisplay();
 // Start the app
 init();
