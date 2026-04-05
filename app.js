@@ -1,4 +1,77 @@
-// ========== STREAK SYSTEM (FIXED) ==========
+// ========== POMODORO TIMER (FIXED) ==========
+let timerInterval = null;
+let timeLeft = 25 * 60; // 25 minutes in seconds
+let isRunning = false;
+
+function updateTimerDisplay() {
+    const timerDisplay = document.getElementById('timer-display');
+    if (!timerDisplay) return;
+    
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    timerDisplay.textContent = display;
+    
+    // Change color when less than 1 minute
+    if (timeLeft < 60) {
+        timerDisplay.style.color = '#f44336';
+    } else {
+        timerDisplay.style.color = '#333';
+    }
+}
+
+function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    isRunning = true;
+    
+    timerInterval = setInterval(() => {
+        if (timeLeft > 0 && isRunning) {
+            timeLeft--;
+            updateTimerDisplay();
+        } else if (timeLeft === 0) {
+            // Timer finished!
+            clearInterval(timerInterval);
+            isRunning = false;
+            
+            // Play sound
+            const alarmSound = document.getElementById('alarm-sound');
+            if (alarmSound) {
+                alarmSound.play().catch(e => console.log('Sound error:', e));
+            }
+            
+            // Show notification
+            showNotification('🍅 Pomodoro Complete!', 'Time for a break! Great focus session!');
+            
+            // Alert popup
+            alert('🎉 Pomodoro completed! Great focus session!');
+            
+            // Reward: Add to completed goals
+            addToCompletedHistory('Pomodoro Session (25 min focus)');
+            
+            // Reset to selected time
+            const selectedTime = parseInt(document.getElementById('timer-select').value);
+            timeLeft = selectedTime * 60;
+            updateTimerDisplay();
+        }
+    }, 1000);
+}
+
+function pauseTimer() {
+    isRunning = false;
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
+
+function resetTimer() {
+    pauseTimer();
+    const selectedTime = parseInt(document.getElementById('timer-select').value);
+    timeLeft = selectedTime * 60;
+    updateTimerDisplay();
+}
+
+// ========== STREAK SYSTEM ==========
 let streak = JSON.parse(localStorage.getItem('streak')) || {
     count: 0,
     bestStreak: 0,
@@ -6,7 +79,6 @@ let streak = JSON.parse(localStorage.getItem('streak')) || {
     history: {}
 };
 
-// Initialize history for last 30 days
 function initHistory() {
     for (let i = 30; i >= 0; i--) {
         const date = new Date();
@@ -23,59 +95,28 @@ function saveStreak() {
     localStorage.setItem('streak', JSON.stringify(streak));
 }
 
-// CHECK AND UPDATE STREAK ON PAGE LOAD (CRITICAL FIX)
-function checkAndUpdateStreakOnLoad() {
-    const today = new Date();
-    const todayKey = today.toISOString().split('T')[0];
-    const lastCompleted = streak.lastCompletedDate ? new Date(streak.lastCompletedDate).toISOString().split('T')[0] : null;
-    
-    // Check if user missed any days
-    if (lastCompleted && lastCompleted !== todayKey) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayKey = yesterday.toISOString().split('T')[0];
-        
-        // If last completion was before yesterday, streak is broken
-        if (lastCompleted !== yesterdayKey && !streak.history[todayKey]) {
-            // Don't reset automatically - user needs to complete today
-            console.log('Streak may be broken. Complete today to continue.');
-        }
-    }
-    
-    updateAllDisplays();
-}
-
-// Update streak when goals are completed
 function updateStreak() {
     const today = new Date();
     const todayKey = today.toISOString().split('T')[0];
     
-    // Already completed today
     if (streak.history[todayKey]) {
         alert('You already completed your goals today! Come back tomorrow.');
         return false;
     }
     
-    // Mark today as completed
     streak.history[todayKey] = true;
     
-    // Calculate yesterday
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayKey = yesterday.toISOString().split('T')[0];
     const lastCompleted = streak.lastCompletedDate ? new Date(streak.lastCompletedDate).toISOString().split('T')[0] : null;
     
     if (lastCompleted === yesterdayKey) {
-        // Streak continues
         streak.count++;
-    } else if (lastCompleted === todayKey) {
-        return false;
     } else {
-        // Streak starts fresh
         streak.count = 1;
     }
     
-    // Update best streak
     if (streak.count > streak.bestStreak) {
         streak.bestStreak = streak.count;
     }
@@ -83,10 +124,9 @@ function updateStreak() {
     streak.lastCompletedDate = new Date().toISOString();
     saveStreak();
     
-    // Add to completed goals history
-    const goal1 = document.getElementById('goal1')?.value || 'Goal 1';
-    const goal2 = document.getElementById('goal2')?.value || 'Goal 2';
-    addToCompletedHistory(`Daily Goals: ${goal1}, ${goal2}`);
+    const goal1 = document.getElementById('goal1')?.value || 'Goal completed';
+    const goal2 = document.getElementById('goal2')?.value || '';
+    addToCompletedHistory(`Daily Goals: ${goal1} ${goal2}`);
     
     updateAllDisplays();
     showNotification('🎉 Streak Updated!', `You're on a ${streak.count} day streak!`);
@@ -94,7 +134,7 @@ function updateStreak() {
     return true;
 }
 
-// ========== ADD TO COMPLETED HISTORY ==========
+// ========== COMPLETED GOALS HISTORY ==========
 let completedGoalsHistory = JSON.parse(localStorage.getItem('completedGoalsHistory')) || [];
 
 function addToCompletedHistory(goalText) {
@@ -106,7 +146,6 @@ function addToCompletedHistory(goalText) {
         timestamp: now.getTime()
     });
     
-    // Keep only last 50 items
     if (completedGoalsHistory.length > 50) {
         completedGoalsHistory = completedGoalsHistory.slice(0, 50);
     }
@@ -203,7 +242,7 @@ function saveHabits() {
     updateHabitDisplay();
 }
 
-// ========== HACKATHON TRACKER (WITH REAL-TIME DEADLINES) ==========
+// ========== HACKATHON TRACKER ==========
 let hackathons = JSON.parse(localStorage.getItem('hackathons')) || [];
 
 function addHackathon() {
@@ -262,11 +301,6 @@ function renderHackathons() {
             if (daysLeft < 0) {
                 daysLeftText = '⚠️ Past Due';
                 daysLeftColor = 'gray';
-                // Auto-update status if past due
-                if (hack.status === 'upcoming' || hack.status === 'participating') {
-                    hack.status = 'completed';
-                    localStorage.setItem('hackathons', JSON.stringify(hackathons));
-                }
             } else if (daysLeft === 0) {
                 daysLeftText = '🔥 TODAY!';
                 daysLeftColor = 'red';
@@ -286,79 +320,6 @@ function renderHackathons() {
             `;
         }).join('')}
     `;
-    
-    // Check for upcoming deadlines and send notifications
-    checkHackathonDeadlines(now);
-}
-
-
-// ========== CALENDAR VIEW ==========
-function renderCalendar() {
-    const calendar = document.getElementById('calendar');
-    if (!calendar) return;
-    
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    
-    let calendarHTML = '<div style="font-weight: bold; grid-column: span 7; margin-bottom: 10px;">';
-    calendarHTML += today.toLocaleString('default', { month: 'long' }) + ' ' + currentYear;
-    calendarHTML += '</div>';
-    
-    // Day labels
-    ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
-        calendarHTML += `<div style="font-weight: bold; font-size: 12px;">${day}</div>`;
-    });
-    
-    // Empty cells for days before month starts
-    for (let i = 0; i < firstDay; i++) {
-        calendarHTML += '<div></div>';
-    }
-    
-    // Fill in days
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dateKey = `${currentYear}-${(currentMonth+1).toString().padStart(2,'0')}-${day.toString().padStart(2,'0')}`;
-        const completed = streak.history[dateKey] || false;
-        const isToday = day === today.getDate() && currentMonth === today.getMonth();
-        
-        let bgColor = '#f0f0f0';
-        if (completed) bgColor = '#4CAF50';
-        else if (streak.history[dateKey] === false && dateKey !== today.toISOString().split('T')[0]) bgColor = '#f44336';
-        
-        calendarHTML += `
-            <div style="
-                background: ${bgColor};
-                padding: 8px;
-                border-radius: 5px;
-                font-weight: ${isToday ? 'bold' : 'normal'};
-                border: ${isToday ? '2px solid #667eea' : 'none'};
-                color: ${completed || bgColor === '#f0f0f0' ? '#333' : 'white'};
-            ">
-                ${day}
-            </div>
-        `;
-    }
-    
-    calendar.innerHTML = calendarHTML;
-}
-
-// Call renderCalendar() in your init() function
-
-function checkHackathonDeadlines(now) {
-    hackathons.forEach(hack => {
-        const deadlineDate = new Date(hack.deadline);
-        const daysLeft = Math.ceil((deadlineDate - now) / (1000 * 60 * 60 * 24));
-        
-        // Send notification for deadlines within 3 days
-        if (daysLeft === 3 || daysLeft === 1 || daysLeft === 0) {
-            if (!localStorage.getItem(`notified_${hack.id}_${daysLeft}`)) {
-                showNotification('⚠️ Hackathon Deadline!', `${hack.name} is in ${daysLeft} days!`);
-                localStorage.setItem(`notified_${hack.id}_${daysLeft}`, 'true');
-            }
-        }
-    });
 }
 
 function deleteHackathon(id) {
@@ -369,9 +330,8 @@ function deleteHackathon(id) {
     }
 }
 
-// ========== ALARM SYSTEM (WORKING FIX) ==========
+// ========== TODO & ALARM SYSTEM ==========
 let todos = JSON.parse(localStorage.getItem('todos')) || [];
-let alarmInterval = null;
 
 function addTodo() {
     const text = document.getElementById('todo-text')?.value;
@@ -397,7 +357,6 @@ function addTodo() {
     document.getElementById('todo-text').value = '';
     if (document.getElementById('todo-time')) document.getElementById('todo-time').value = '';
     
-    // Check alarms immediately
     checkAllAlarms();
 }
 
@@ -454,7 +413,6 @@ function deleteTodo(id) {
     renderTodos();
 }
 
-// CRITICAL: Check all alarms every minute
 function checkAllAlarms() {
     const now = new Date();
     
@@ -463,41 +421,24 @@ function checkAllAlarms() {
             const alarmTime = new Date(todo.time);
             const timeDiff = alarmTime - now;
             
-            // If alarm time is within the last minute (or just passed)
             if (timeDiff <= 0 && timeDiff > -60000) {
-                // Trigger alarm
                 todo.alarmTriggered = true;
                 saveTodos();
                 
-                // Play sound
                 const alarmSound = document.getElementById('alarm-sound');
                 if (alarmSound) {
                     alarmSound.play().catch(e => console.log('Sound error:', e));
                 }
                 
-                // Show notification
                 showNotification('⏰ ALARM!', `Time to: ${todo.text}`);
-                
-                // Alert popup
                 alert(`🔔 ALARM: ${todo.text}`);
-                
-                // Also add to completed history if needed
                 addToCompletedHistory(`Alarm triggered: ${todo.text}`);
             }
         }
     });
-    
-    // Also check for overdue tasks
-    todos.forEach(todo => {
-        if (todo.time && !todo.completed && new Date(todo.time) < now && !todo.overdueNotified) {
-            todo.overdueNotified = true;
-            saveTodos();
-            showNotification('⚠️ Overdue Task', `${todo.text} is overdue!`);
-        }
-    });
 }
 
-// ========== BAR GRAPH ==========
+// ========== BAR GRAPH & CALENDAR ==========
 function renderBarGraph() {
     const barGraph = document.getElementById('bar-graph');
     if (!barGraph) return;
@@ -535,7 +476,6 @@ function renderBarGraph() {
         barGraph.appendChild(barItem);
     });
     
-    // Update stats
     const completedCount = days.filter(d => d.completed).length;
     const rate = Math.round((completedCount / 7) * 100);
     
@@ -554,7 +494,6 @@ function renderBarGraph() {
         summaryDiv.innerHTML = `This week: ${completedCount}/7 days (${rate}%)`;
     }
     
-    // Streak message
     const streakMsg = document.getElementById('streak-message');
     if (streakMsg) {
         if (streak.count === 0) streakMsg.textContent = '✨ Complete today\'s goals to start! ✨';
@@ -565,13 +504,65 @@ function renderBarGraph() {
     }
 }
 
+function renderCalendar() {
+    const calendar = document.getElementById('calendar');
+    if (!calendar) return;
+    
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    
+    let calendarHTML = '';
+    
+    // Day labels
+    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    dayLabels.forEach(day => {
+        calendarHTML += `<div style="font-weight: bold; font-size: 12px; text-align: center;">${day}</div>`;
+    });
+    
+    // Empty cells
+    for (let i = 0; i < firstDay; i++) {
+        calendarHTML += '<div></div>';
+    }
+    
+    // Fill days
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = `${currentYear}-${(currentMonth+1).toString().padStart(2,'0')}-${day.toString().padStart(2,'0')}`;
+        const completed = streak.history[dateKey] || false;
+        const isToday = day === today.getDate() && currentMonth === today.getMonth();
+        
+        let bgColor = '#f0f0f0';
+        let textColor = '#333';
+        
+        if (completed) {
+            bgColor = '#4CAF50';
+            textColor = 'white';
+        } else if (streak.history[dateKey] === false && dateKey !== today.toISOString().split('T')[0]) {
+            bgColor = '#f44336';
+            textColor = 'white';
+        }
+        
+        calendarHTML += `
+            <div class="calendar-day ${completed ? 'completed' : ''} ${!completed && streak.history[dateKey] === false ? 'missed' : ''} ${isToday ? 'today' : ''}"
+                 style="background: ${bgColor}; color: ${textColor}; padding: 8px; border-radius: 8px; text-align: center;">
+                ${day}
+            </div>
+        `;
+    }
+    
+    calendar.innerHTML = calendarHTML;
+}
+
 function updateAllDisplays() {
     renderBarGraph();
+    renderCalendar();
     renderHackathons();
     renderCompletedGoals();
     updateHabitDisplay();
     renderTodos();
-    checkAllAlarms(); // Check alarms on every update
+    checkAllAlarms();
 }
 
 // ========== NOTIFICATIONS ==========
@@ -643,91 +634,109 @@ function completeDailyGoals() {
     }
 }
 
+// ========== DATA EXPORT/IMPORT ==========
+function exportAllData() {
+    const allData = {
+        streak: streak,
+        habits: habits,
+        hackathons: hackathons,
+        completedGoals: completedGoalsHistory,
+        todos: todos,
+        exportDate: new Date().toISOString()
+    };
+    const dataStr = JSON.stringify(allData, null, 2);
+    const blob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `toodoo-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showNotification('Export Complete', 'Your data has been backed up!');
+}
+
+function importData(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const imported = JSON.parse(e.target.result);
+            if (imported.streak) localStorage.setItem('streak', JSON.stringify(imported.streak));
+            if (imported.habits) localStorage.setItem('habits', JSON.stringify(imported.habits));
+            if (imported.hackathons) localStorage.setItem('hackathons', JSON.stringify(imported.hackathons));
+            if (imported.completedGoals) localStorage.setItem('completedGoalsHistory', JSON.stringify(imported.completedGoals));
+            if (imported.todos) localStorage.setItem('todos', JSON.stringify(imported.todos));
+            
+            alert('Import successful! Refresh the page to see changes.');
+            location.reload();
+        } catch (error) {
+            alert('Invalid backup file');
+        }
+    };
+    reader.readAsText(file);
+}
+
+// ========== DARK MODE ==========
+const darkModeToggle = document.getElementById('dark-mode-toggle');
+const isDarkMode = localStorage.getItem('darkMode') === 'true';
+
+if (isDarkMode) {
+    document.body.classList.add('dark-mode');
+    if (darkModeToggle) darkModeToggle.textContent = '☀️';
+}
+
+if (darkModeToggle) {
+    darkModeToggle.onclick = () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('darkMode', isDark);
+        darkModeToggle.textContent = isDark ? '☀️' : '🌙';
+    };
+}
+
 // ========== INITIALIZE ==========
 function init() {
     initHistory();
-    checkAndUpdateStreakOnLoad();
     loadGoals();
     updateAllDisplays();
     
-    // Check alarms every 30 seconds (not every minute for better accuracy)
+    // Setup timer event listeners
+    const startBtn = document.getElementById('start-timer');
+    const pauseBtn = document.getElementById('pause-timer');
+    const resetBtn = document.getElementById('reset-timer');
+    const timerSelect = document.getElementById('timer-select');
+    
+    if (startBtn) startBtn.onclick = startTimer;
+    if (pauseBtn) pauseBtn.onclick = pauseTimer;
+    if (resetBtn) resetBtn.onclick = resetTimer;
+    if (timerSelect) timerSelect.onchange = resetTimer;
+    
+    // Setup settings buttons
+    const exportBtn = document.getElementById('export-data');
+    const importBtn = document.getElementById('import-data');
+    const importFile = document.getElementById('import-file');
+    const clearAllBtn = document.getElementById('clear-all');
+    
+    if (exportBtn) exportBtn.onclick = exportAllData;
+    if (importBtn) importBtn.onclick = () => importFile.click();
+    if (importFile) importFile.onchange = (e) => importData(e.target.files[0]);
+    if (clearAllBtn) {
+        clearAllBtn.onclick = () => {
+            if (confirm('⚠️ THIS WILL DELETE EVERYTHING. Are you sure?')) {
+                localStorage.clear();
+                alert('All data cleared. Refresh the page.');
+                location.reload();
+            }
+        };
+    }
+    
+    // Check alarms every 30 seconds
     setInterval(() => {
         checkAllAlarms();
-        renderHackathons(); // Refresh hackathon display
+        renderHackathons();
     }, 30000);
     
-    console.log('App initialized! Alarms checking every 30 seconds.');
+    console.log('App initialized! Pomodoro timer is ready.');
 }
 
-
-
-// ========== POMODORO TIMER ==========
-let timerInterval = null;
-let timeLeft = 25 * 60; // 25 minutes in seconds
-let isRunning = false;
-
-function updateTimerDisplay() {
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-    const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    const timerDisplay = document.getElementById('timer-display');
-    if (timerDisplay) timerDisplay.textContent = display;
-    
-    // Change color when less than 1 minute
-    if (timeLeft < 60) {
-        timerDisplay.style.color = '#f44336';
-    } else {
-        timerDisplay.style.color = '#333';
-    }
-}
-
-function startTimer() {
-    if (timerInterval) clearInterval(timerInterval);
-    isRunning = true;
-    timerInterval = setInterval(() => {
-        if (timeLeft > 0 && isRunning) {
-            timeLeft--;
-            updateTimerDisplay();
-        } else if (timeLeft === 0) {
-            // Timer finished!
-            clearInterval(timerInterval);
-            isRunning = false;
-            showNotification('🍅 Pomodoro Complete!', 'Time for a break!');
-            alert('🎉 Pomodoro completed! Great focus session!');
-            
-            // Reward: Add to completed goals
-            addToCompletedHistory('Pomodoro Session');
-            
-            // Play sound
-            const alarmSound = document.getElementById('alarm-sound');
-            if (alarmSound) alarmSound.play();
-        }
-    }, 1000);
-}
-
-function pauseTimer() {
-    isRunning = false;
-}
-
-function resetTimer() {
-    clearInterval(timerInterval);
-    isRunning = false;
-    const selectedTime = parseInt(document.getElementById('timer-select').value);
-    timeLeft = selectedTime * 60;
-    updateTimerDisplay();
-}
-
-// Event listeners
-const startBtn = document.getElementById('start-timer');
-const pauseBtn = document.getElementById('pause-timer');
-const resetBtn = document.getElementById('reset-timer');
-const timerSelect = document.getElementById('timer-select');
-
-if (startBtn) startBtn.onclick = startTimer;
-if (pauseBtn) pauseBtn.onclick = pauseTimer;
-if (resetBtn) resetBtn.onclick = resetTimer;
-if (timerSelect) timerSelect.onchange = resetTimer;
-
-updateTimerDisplay();
 // Start the app
 init();
